@@ -1,7 +1,6 @@
 const express = require("express")
 const app = express()
 const cors = require("cors")
-
 const kfaRouter = require('./routes/kfa');
 
 app.use(express.json());

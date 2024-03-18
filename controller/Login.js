@@ -11,14 +11,15 @@ class Login {
         var config = {
             method: 'post',
             maxBodyLength: Infinity,
-            url: 'https://api-satusehat-dev.dto.kemkes.go.id/oauth2/v1/accesstoken',
+            url: 'https://api-satusehat-stg.dto.kemkes.go.id/oauth2/v1/accesstoken',
             params: {
                 'grant_type': 'client_credentials'
             },
             headers: { 
               'Content-Type': 'application/x-www-form-urlencoded'
             },
-            data : bodyForm
+            data : bodyForm,
+            timeout: 20000
           };
 
 

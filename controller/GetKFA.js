@@ -8,14 +8,16 @@ class GetKFA {
         var config = {
             method: 'get',
             maxBodyLength: Infinity,
-            url: 'https://api-satusehat-dev.dto.kemkes.go.id/kfa-v2/products',
+            url: 'https://api-satusehat-stg.dto.kemkes.go.id/kfa-v2/products',
             params: {
                 'identifier': 'nie',
                 'code': noReg
             },
             headers: { 
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
+              'Authorization': `Bearer ${token}`,
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache'
             },
           };
         

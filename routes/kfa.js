@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const { parse } = require("csv-parse");
 const db = require('../config/db');
-const oracledb = require('oracledb')
+const oracledb = require('oracledb');
 
 const diskStorage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -24,120 +24,162 @@ const diskStorage = multer.diskStorage({
 
 router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), async (req,res) => {
     let file = req.file.path
+    var noReq = []
+    var nie = []
+    var reGet = []
+    var connection
+
     try {
         const list = await new Login().login()
+        var data = fs.readFileSync(file)
+        var lines = data.toString().split('\r\n').toString()
+        var array = lines.split(",")
 
-        fs.createReadStream(file)
-        .pipe(parse({delimiter: ",", "from_line": 2}))
-        .on("data", async function(row) {
-            try{
-                var kfa = await new KFA().getKFA(list['data']['access_token'], row[0])
+        for(i in array) {
+            if(array[i].length > 5) {
+                noReq.push(array[i])
+            }
+        }
 
-                let connection
+        let delay = 0
 
-                let query = `
-                    BEGIN
-                    INSERT INTO RN.MST_PROD_KFA(
-                        REG_NO,
-                        KFA_NO,
-                        UOM,
-                        NAME,
-                        TYPE,
-                        MANUFACTURER,
-                        REGISTRAR,
-                        TRADE_NAME,
-                        DATE_UPLOADED
-                    ) VALUES (
-                        '${kfa['data']['search_code']}',
-                        '${kfa['data']['result']['kfa_code']}',
-                        '${kfa['data']['result']['uom']['name']}',
-                        '${kfa['data']['result']['name']}',
-                        '${kfa['data']['result']['farmalkes_type']['name']}',
-                        '${kfa['data']['result']['manufacturer']}',
-                        '${kfa['data']['result']['registrar']}',
-                        '${kfa['data']['result']['nama_dagang']}',
-                        SYSDATE
-                    );
-                    END;
-                `
+        noReq.forEach((nie) => {
+            setTimeout(async () => {
+                try{
+                    var kfa = await new KFA().getKFA(list['data']['access_token'], nie)
+                    
+                    let query = `
+                        BEGIN
+                        INSERT INTO RN.MST_PROD_KFA(
+                            REG_NO,
+                            KFA_NO,
+                            UOM,
+                            NAME,
+                            TYPE,
+                            MANUFACTURER,
+                            REGISTRAR,
+                            TRADE_NAME,
+                            DATE_UPLOADED
+                        ) VALUES (
+                            '${kfa['data']['search_code']}',
+                            '${kfa['data']['result']['kfa_code']}',
+                            '${kfa['data']['result']['uom']['name']}',
+                            '${kfa['data']['result']['name']}',
+                            '${kfa['data']['result']['farmalkes_type']['name']}',
+                            '${kfa['data']['result']['manufacturer']}',
+                            '${kfa['data']['result']['registrar']}',
+                            '${kfa['data']['result']['nama_dagang']}',
+                            SYSDATE
+                        );
+                        END;
+                    `
 
-                try {
-
-                    connection = await oracledb.getConnection(db.oracle)
-            
-                    await connection.execute(query,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
-            
-                } catch (err) {
-                    console.error(err.message);
-                } finally {
-                    if (connection) {
-                        try {
-                        await connection.close();
-                        } catch (err) {
+                    try {
+                        connection = await oracledb.getConnection(db.oracle)
+                
+                        await connection.execute(query,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
+                
+                    } catch (err) {
                         console.error(err.message);
-                        }
-                    }
-                }
-                if(kfa['data']['result']['kfa_code'] != false) {
-                    for(let i=0; i < kfa['data']['result']['packaging_ids'].length; i++){
-
-                        let query1 = `
-                            BEGIN
-                            INSERT INTO RN.MST_PROD_KFA(
-                                REG_NO,
-                                KFA_NO,
-                                UOM,
-                                NAME,
-                                UOM_KFA,
-                                TYPE,
-                                MANUFACTURER,
-                                REGISTRAR,
-                                TRADE_NAME,
-                                DATE_UPLOADED
-                            ) VALUES (
-                                '${kfa['data']['search_code']}',
-                                '${kfa['data']['result']['packaging_ids'][i]['kfa_code']}',
-                                '${kfa['data']['result']['packaging_ids'][i]['uom_id']}',
-                                '${kfa['data']['result']['name']}',
-                                '${kfa['data']['result']['packaging_ids'][i]['name']}',
-                                '${kfa['data']['result']['farmalkes_type']['name']}',
-                                '${kfa['data']['result']['manufacturer']}',
-                                '${kfa['data']['result']['registrar']}',
-                                '${kfa['data']['result']['nama_dagang']}',
-                                SYSDATE
-                            );
-                            END;
-                        `
-
-                        try {
-
-                            connection = await oracledb.getConnection(db.oracle)
-                    
-                            await connection.execute(query1,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
-                    
-                        } catch (err) {
+                    } finally {
+                        if (connection) {
+                            try {
+                            await connection.close();
+                            } catch (err) {
                             console.error(err.message);
-                        } finally {
-                            if (connection) {
-                                try {
-                                await connection.close();
-                                } catch (err) {
-                                console.error(err.message);
-                                }
                             }
                         }
                     }
-                } 
-            } catch (e) {
-                console.log(e)
-            }
+                    if(kfa['data']['result']['kfa_code'] != false) {
+                        for(let i=0; i < kfa['data']['result']['packaging_ids'].length; i++){
+                            let query1 = `
+                                BEGIN
+                                INSERT INTO RN.MST_PROD_KFA(
+                                    REG_NO,
+                                    KFA_NO,
+                                    UOM,
+                                    NAME,
+                                    UOM_KFA,
+                                    TYPE,
+                                    MANUFACTURER,
+                                    REGISTRAR,
+                                    TRADE_NAME,
+                                    DATE_UPLOADED
+                                ) VALUES (
+                                    '${kfa['data']['search_code']}',
+                                    '${kfa['data']['result']['packaging_ids'][i]['kfa_code']}',
+                                    '${kfa['data']['result']['packaging_ids'][i]['uom_id']}',
+                                    '${kfa['data']['result']['name']}',
+                                    '${kfa['data']['result']['packaging_ids'][i]['name']}',
+                                    '${kfa['data']['result']['farmalkes_type']['name']}',
+                                    '${kfa['data']['result']['manufacturer']}',
+                                    '${kfa['data']['result']['registrar']}',
+                                    '${kfa['data']['result']['nama_dagang']}',
+                                    SYSDATE
+                                );
+                                END;
+                            `
+
+                            try {
+
+                                connection = await oracledb.getConnection(db.oracle)
+                        
+                                await connection.execute(query1,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
+                        
+                            } catch (err) {
+                                console.error(err.message);
+                            } finally {
+                                if (connection) {
+                                    try {
+                                    await connection.close();
+                                    } catch (err) {
+                                    console.error(err.message);
+                                    }
+                                }
+                            }
+                        }
+                    } 
+
+                } catch (e) {
+                    let query2 = `
+                        BEGIN
+                        INSERT INTO RN.MST_PROD_KFA(
+                            REG_NO,
+                            DATE_UPLOADED
+                        ) VALUES (
+                            '${nie}',
+                            SYSDATE
+                        );
+                        END;
+                    `
+
+                    try {
+
+                        connection = await oracledb.getConnection(db.oracle)
+                
+                        await connection.execute(query2,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
+                
+                    } catch (err) {
+                        console.error(err.message);
+                    } finally {
+                        if (connection) {
+                            try {
+                            await connection.close();
+                            } catch (err) {
+                            console.error(err.message);
+                            }
+                        }
+                    }
+                }
+            }, 1000 + delay )
+            delay += 1000
         })
 
         setTimeout( function() {
             fs.unlink(file, (err) => {
                     if (err) throw err
             })
-        }, 10000)
+        }, 15000)
 
         res.status(200).json({
             "message": "ok"
