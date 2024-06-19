@@ -27,6 +27,26 @@ class Login {
         return client
         
     }
+
+    async loginAPIDIN() {
+      var bodyForm = qs.stringify({
+        "grant_type": "password",
+        "username": "demo@kemkes.go.id",
+        "password": "demo"
+      })
+
+      var config = {
+        method: "post",
+        url: "http://apidin.jalak.id/v1/token",
+        headers: { 
+          'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data : bodyForm
+      }
+
+      let client = axios.request(config)
+      return client
+    }
 };
 
 module.exports = Login;

@@ -5,7 +5,6 @@ const KFA = require("../controller/GetKFA");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
-const { parse } = require("csv-parse");
 const db = require('../config/db');
 const oracledb = require('oracledb');
 
@@ -52,7 +51,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                         BEGIN
                         INSERT INTO RN.MST_PROD_KFA(
                             REG_NO,
-                            KFA_NO,
+                            KFA_NO_93,
                             UOM,
                             NAME,
                             TYPE,
@@ -96,7 +95,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                                 BEGIN
                                 INSERT INTO RN.MST_PROD_KFA(
                                     REG_NO,
-                                    KFA_NO,
+                                    KFA_NO_93,
                                     UOM,
                                     NAME,
                                     UOM_KFA,
@@ -104,10 +103,12 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                                     MANUFACTURER,
                                     REGISTRAR,
                                     TRADE_NAME,
-                                    DATE_UPLOADED
+                                    DATE_UPLOADED,
+                                    KFA_NO_94,
+                                    QTY_CONTAINED
                                 ) VALUES (
                                     '${kfa['data']['search_code']}',
-                                    '${kfa['data']['result']['packaging_ids'][i]['kfa_code']}',
+                                    '${kfa['data']['result']['kfa_code']}',
                                     '${kfa['data']['result']['packaging_ids'][i]['uom_id']}',
                                     '${kfa['data']['result']['name']}',
                                     '${kfa['data']['result']['packaging_ids'][i]['name']}',
@@ -115,7 +116,9 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                                     '${kfa['data']['result']['manufacturer']}',
                                     '${kfa['data']['result']['registrar']}',
                                     '${kfa['data']['result']['nama_dagang']}',
-                                    SYSDATE
+                                    SYSDATE,
+                                    '${kfa['data']['result']['packaging_ids'][i]['kfa_code']}',
+                                    '${Number(kfa['data']['result']['packaging_ids'][i]['qty'])}'
                                 );
                                 END;
                             `
