@@ -1,5 +1,3 @@
-const oracledb = require('oracledb')
-
 const oracle = {
   user: "RN",
   password: "RNNUS",
