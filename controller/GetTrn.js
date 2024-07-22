@@ -3,17 +3,28 @@ const oracledb = require('oracledb')
 const axios = require('axios')
 
 class GetTrn {
-    async getTrn(valdate) {
+    async getTrn(docNum, lot) {
         let connection
         var result
 
-        let query = `SELECT * FROM TRN_KEMENKES_DEV WHERE VAL_DATE = TO_DATE('${valdate}', 'DD/MM/YYYY')`
+        let query
 
+        if(docNum === "" && lot !== "") {
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND LOT_NO = '${lot}`
+        } if (lot === "" && docNum !== "") {
+            console.log("test")
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND DOC_NUM = '${docNum}'`
+        } if (lot === "" && docNum === "") {
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL`
+        } if (lot !== "" && docNum !== "") {
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND DOC_NUM = '${docNum}' AND LOT_NO = '${lot}'}`
+        }
+        console.log(query)
         try {
             connection = await oracledb.getConnection(db.oracle)
-    
-            result = await connection.execute(query)
 
+            result = await connection.execute(query)
+            console.log(result)
             return result
         } catch (err) {
             console.error(err.message);
@@ -28,23 +39,19 @@ class GetTrn {
         }
     }
 
-    async postToApidin(token, body){
+    async postTransaksi(token, body){
         try {
-            axios.post('http://apidin.jalak.id/v1/ship/notification?server=staging', body, {
+            axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', body, {
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                params: {
-                    'server': 'staging'
-                }
             }).then(json => {
-                console.log("masuk then json")
-                // console.log(json)
+                // console.log("masuk then json")
+                console.log(json)
             })
         } catch (e) {
-            console.log("masuk error")
-            // res.status(500).json({e: e})
+            res.status(500).json({e: e})
         }
     }
 }
