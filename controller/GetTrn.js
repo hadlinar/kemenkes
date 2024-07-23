@@ -10,21 +10,43 @@ class GetTrn {
         let query
 
         if(docNum === "" && lot !== "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND LOT_NO = '${lot}`
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot}`
         } if (lot === "" && docNum !== "") {
-            console.log("test")
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND DOC_NUM = '${docNum}'`
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}'`
         } if (lot === "" && docNum === "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL`
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N'`
         } if (lot !== "" && docNum !== "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND DOC_NUM = '${docNum}' AND LOT_NO = '${lot}'}`
+            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' AND LOT_NO = '${lot}'}`
         }
-        console.log(query)
         try {
             connection = await oracledb.getConnection(db.oracle)
 
             result = await connection.execute(query)
-            console.log(result)
+            return result
+        } catch (err) {
+            console.error(err.message);
+        } finally {
+            if (connection) {
+                try {
+                await connection.close();
+                } catch (err) {
+                console.error(err.message);
+                }
+            }
+        }
+    }
+
+    async updateDB(docNum) {
+        let connection
+        var result
+
+        let query = `UPDATE TRN_KEMENKES_DEV SET FLG_EXPORT = 'Y'
+                     WHERE doc_num = '${docNum}'`
+
+        try {
+            connection = await oracledb.getConnection(db.oracle)
+
+            result = await connection.execute(query, [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
             return result
         } catch (err) {
             console.error(err.message);

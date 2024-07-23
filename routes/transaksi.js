@@ -18,6 +18,7 @@ router.post('/kemenkes/transaksi', async (req,res) => {
         var objData
         var listObj = []
         let delay = 0
+        let isUpdated = false
 
         data.rows.forEach((e) => {
             objData = {
@@ -82,23 +83,25 @@ router.post('/kemenkes/transaksi', async (req,res) => {
             listObj.push(objData)
         })
 
-        
-        listObj.forEach((e) => {
-            setTimeout(async () => {
-                const mergedData = listObj.reduce((acc, item) => {
-                    const key = item.doc_num
-        
-                    if (!acc[key]) {
+        const processAndUpdate = async () => {
+            const mergedData = listObj.reduce((acc, item) => {
+                const key = item.doc_num;
+                if (!acc[key]) {
                     acc[key] = {
                         ...item,
                         data: [...item.data]
                     };
-                    } else {
+                } else {
                     acc[key].data = [...acc[key].data, ...item.data];
-                    }
-                
-                    return acc;
-                }, {})
+                }
+                return acc;
+            }, {});
+        
+            const firstDocNum = Object.values(mergedData)[0]?.doc_num;
+            if (firstDocNum) {
+                await new TRN().updateDB(firstDocNum);
+                // console.log(Object.values(mergedData)[0]);
+        
                 axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(Object.values(mergedData)[0]), {
                     headers: {
                         'Authorization': `Bearer ${token['data']['access_token']}`,
@@ -106,14 +109,64 @@ router.post('/kemenkes/transaksi', async (req,res) => {
                     },
                 })
                 .then(res => {
-                    console.log(res.data)
+                    console.log(res.data);
                 })
                 .catch(e => {
-                    console.log(e)
-                })
-            }, 1000 + delay)
-            delay += 1000
+                    console.log(e);
+                });
+        
+                isUpdated = true;
+            }
+        };
+        
+        listObj.forEach((e, index) => {
+            if (!isUpdated) {
+                setTimeout(async () => {
+                    if (!isUpdated) { 
+                        await processAndUpdate();
+                    }
+                }, 1000 + delay);
+                delay += 1000;
+            }
         })
+        
+        // listObj.forEach((e, index) => {
+        //     setTimeout(async () => {
+        //         if(!isUpdated) {
+        //             const mergedData = listObj.reduce((acc, item) => {
+        //                 const key = item.doc_num
+            
+        //                 if (!acc[key]) {
+        //                 acc[key] = {
+        //                     ...item,
+        //                     data: [...item.data]
+        //                 };
+        //                 } else {
+        //                 acc[key].data = [...acc[key].data, ...item.data];
+        //                 }
+                    
+        //                 return acc;
+        //             }, {})
+        //             new TRN().updateDB(item.doc_num)
+        //             console.log(Object.values(mergedData)[0])
+        //             // await new TRN().updateDB(Object.values(mergedData)[0]['doc_num'])
+        //             // axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(Object.values(mergedData)[0]), {
+        //             //     headers: {
+        //             //         'Authorization': `Bearer ${token['data']['access_token']}`,
+        //             //         'Content-Type': 'application/json'
+        //             //     },
+        //             // })
+        //             // .then(res => {
+        //             //     console.log(res.data)
+        //             // })
+        //             // .catch(e => {
+        //             //     console.log(e)
+        //             // })
+        //             isUpdated = true
+        //         }
+        //     }, 1000 + delay)
+        //     delay += 1000
+        // })
 
         
     } catch(e) {
