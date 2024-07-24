@@ -10,13 +10,13 @@ class GetTrn {
         let query
 
         if(docNum === "" && lot !== "") {
-            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot}`
+            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot}`
         } if (lot === "" && docNum !== "") {
-            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}'`
+            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}'`
         } if (lot === "" && docNum === "") {
-            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N'`
+            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N'`
         } if (lot !== "" && docNum !== "") {
-            query = `SELECT * FROM TRN_KEMENKES_DEV WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' AND LOT_NO = '${lot}'}`
+            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' AND LOT_NO = '${lot}'}`
         }
         try {
             connection = await oracledb.getConnection(db.oracle)
@@ -40,7 +40,7 @@ class GetTrn {
         let connection
         var result
 
-        let query = `UPDATE TRN_KEMENKES_DEV SET FLG_EXPORT = 'Y'
+        let query = `UPDATE TRN_KEMENKES SET FLG_EXPORT = 'Y'
                      WHERE doc_num = '${docNum}'`
 
         try {
