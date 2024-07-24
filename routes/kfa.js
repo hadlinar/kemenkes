@@ -58,6 +58,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                             MANUFACTURER,
                             REGISTRAR,
                             TRADE_NAME,
+                            DRUG_CLASS,
                             DATE_UPLOADED
                         ) VALUES (
                             '${kfa['data']['search_code']}',
@@ -68,6 +69,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                             '${kfa['data']['result']['manufacturer']}',
                             '${kfa['data']['result']['registrar']}',
                             '${kfa['data']['result']['nama_dagang']}',
+                            '${kfa['data']['result']['controlled_drug']['name']}',
                             SYSDATE
                         );
                         END;
@@ -103,6 +105,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                                     MANUFACTURER,
                                     REGISTRAR,
                                     TRADE_NAME,
+                                    DRUG_CLASS,
                                     DATE_UPLOADED,
                                     KFA_NO_94,
                                     QTY_CONTAINED
@@ -116,6 +119,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
                                     '${kfa['data']['result']['manufacturer']}',
                                     '${kfa['data']['result']['registrar']}',
                                     '${kfa['data']['result']['nama_dagang']}',
+                                    '${kfa['data']['result']['controlled_drug']['name']}',
                                     SYSDATE,
                                     '${kfa['data']['result']['packaging_ids'][i]['kfa_code']}',
                                     '${Number(kfa['data']['result']['packaging_ids'][i]['qty'])}'

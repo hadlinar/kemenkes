@@ -2,7 +2,8 @@ const express = require("express")
 const app = express()
 const cors = require("cors")
 const kfaRouter = require('./routes/kfa')
-const apidinRouter = require('./routes/apidin')
+const transaksiRouter = require('./routes/transaksi')
+const saranaRouter = require('./routes/sarana')
 
 app.use(express.json())
 app.use(cors())
@@ -23,7 +24,8 @@ app.use(function (req, res, next) {
 })
 
 app.use(kfaRouter)
-app.use(apidinRouter);
+app.use(transaksiRouter)
+app.use(saranaRouter)
 
 var port = 8083
 
