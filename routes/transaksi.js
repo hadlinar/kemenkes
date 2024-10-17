@@ -1,29 +1,24 @@
-const express = require("express")
-const router = express.Router()
-const Login = require("../controller/Login")
-const TRN = require("../controller/GetTrn")
-const moment = require('moment-timezone')
-const GetTrn = require("../controller/GetTrn")
-const axios = require('axios')
-const { stringify } = require("qs")
+const express = require("express");
+const router = express.Router();
+const Login = require("../controller/Login");
+const TRN = require("../controller/GetTrn");
+const moment = require('moment-timezone');
+const axios = require('axios');
 
-router.post('/kemenkes/transaksi', async (req,res) => {
-    let docNum = req.query.docNum
-    let lot = req.query.lot
+router.post('/kemenkes/transaksi', async (req, res) => {
+    let docNum = req.query.docNum;
+    let lot = req.query.lot;
 
     try {
-        const token = await new Login().login()
-        const data = await new TRN().getTrn(docNum, lot)
-        const temp = []
-        var objData
-        var listObj = []
-        let delay = 0
-        let isUpdated = false
+        const token = await new Login().login();
+        const data = await new TRN().getTrn(docNum, lot);
+        let listObj = [];
 
         data.rows.forEach((e) => {
-            objData = {
+            let objData = {
                 "doc_num": e[0],
-                "ref_num": e[1].toString().toLowerCase(),
+                "ref_num": e[1],
+                "tanggal_transaksi": moment.utc(e[37], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
                 "code": e[2],
                 "line": e[3].toString().toLowerCase(),
                 "line_ref": e[4].toString().toLowerCase(),
@@ -63,13 +58,13 @@ router.post('/kemenkes/transaksi', async (req,res) => {
                 "note": e[34] ?? "",
                 "created_by": e[35] ?? "",
                 "updated_by": e[36] ?? "",
-                "tanggal_transaksi": moment.utc(e[37], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
+                "created_at": moment.utc(e[37], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
                 "updated_at": moment.utc(e[38], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
                 "data": [
                     {
                         "lot_no": e[39],
                         "tgl_kadaluarsa": moment.utc(e[40], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
-                        "tgl_produksi": moment.utc(e[41], "ddd MMM DD YYYY HH:mm:ss [GMT]ZZ").tz("Asia/Jakarta").format("YYYY-MM-DD") ?? "",
+                        "tgl_produksi": "",
                         "product_name": e[42] ?? "",
                         "kfa_code": e[43] ?? "",
                         "qty": e[44] ?? 0,
@@ -79,62 +74,68 @@ router.post('/kemenkes/transaksi', async (req,res) => {
                         "note": e[48] ?? "",
                     }
                 ]
-            }
-            listObj.push(objData)
-        })
+            };
+            listObj.push(objData);
+        });
 
-        const processAndUpdate = async () => {
-            const mergedData = listObj.reduce((acc, item) => {
-                const key = item.doc_num
-                if (!acc[key]) {
-                    acc[key] = {
-                        ...item,
-                        data: [...item.data]
-                    }
-                } else {
-                    acc[key].data = [...acc[key].data, ...item.data]
-                }
-                return acc
-            }, {})
-        
-            const firstDocNum = Object.values(mergedData)[0]?.doc_num
-            if (firstDocNum) {
-                await new TRN().updateDB(firstDocNum)
-                // console.log(Object.values(mergedData)[0])
-        
-                axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(Object.values(mergedData)[0]), {
-                    headers: {
-                        'Authorization': `Bearer ${token['data']['access_token']}`,
-                        'Content-Type': 'application/json'
-                    },
-                })
-                .then(res => {
-                    console.log(res.data)
-                })
-                .catch(e => {
-                    console.log(e)
-                })
-        
-                isUpdated = true
+        const mergedData = listObj.reduce((acc, item) => {
+            const key = item.doc_num;
+            if (!acc[key]) {
+                acc[key] = {
+                    ...item,
+                    data: [...item.data]
+                };
+            } else {
+                acc[key].data = [...acc[key].data, ...item.data];
             }
+            return acc;
+        }, {});
+
+        const sendData = async (data, token) => {
+            const promises = data.map((item, index) => {
+                return new Promise((resolve) => {
+                    setTimeout(async () => {
+                        try {
+                            // await new TRN().updateDB(item.doc_num)
+
+                            // const response = await axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(item), {
+                            //     headers: {
+                            //         'Authorization': Bearer ${token['data']['access_token']},
+                            //         'Content-Type': 'application/json'
+                            //     },
+                            // });
+                            console.log(response)
+                            resolve({ status_code: `${response.data.code} - ${response.data.message}`, item });
+                        } catch (error) {
+                            resolve({ success: false, item});
+                        }
+                    }, index * 1000);
+                });
+            });
+
+            const results = await Promise.all(promises);
+            return results;
+        };
+
+        const firstDocNum = Object.values(mergedData)[0]?.doc_num;
+        if (firstDocNum) {
+            const result = await sendData(Object.values(mergedData), token);
+            return res.status(201).json({
+                message: `Data processed`,
+                result
+            });
+        } else {
+            return res.status(400).json({
+                message: `No data found to process`
+            });
         }
-        
-        listObj.forEach((e, index) => {
-            if (!isUpdated) {
-                setTimeout(async () => {
-                    if (!isUpdated) { 
-                        await processAndUpdate()
-                    }
-                }, 1000 + delay)
-                delay += 1000
-            }
-        })
-
-        
-    } catch(e) {
-        console.log(e)
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({
+            message: `Server error`,
+            error: e.message
+        });
     }
+});
 
-})
-
-module.exports = router
+module.exports = router;
