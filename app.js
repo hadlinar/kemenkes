@@ -4,6 +4,8 @@ const cors = require("cors")
 const kfaRouter = require('./routes/kfa')
 const transaksiRouter = require('./routes/transaksi')
 const saranaRouter = require('./routes/sarana')
+const cron = require("node-cron")
+const axios = require('axios')
 
 app.use(express.json())
 app.use(cors())
@@ -26,9 +28,17 @@ app.use(function (req, res, next) {
 app.use(kfaRouter)
 app.use(transaksiRouter)
 app.use(saranaRouter)
+app.use('/kemenkes/transaksi', transaksiRouter)
 
-var port = 8083
+cron.schedule('30 1,2 * * *', async () => {
+    try {
+        await axios.post('http://localhost:8250/kemenkes/transaksi?docNum=&lot');
+    } catch (error) {
+    }
+});
 
-app.listen(8083, () => {
+var port = 8250
+
+app.listen(8250, () => {
   console.log(`Server running at on port ${port}`);
 })

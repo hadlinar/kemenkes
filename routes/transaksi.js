@@ -94,22 +94,26 @@ router.post('/kemenkes/transaksi', async (req, res) => {
         const sendData = async (data, token) => {
             const promises = data.map((item, index) => {
                 return new Promise((resolve) => {
+                    var response
                     setTimeout(async () => {
                         try {
-                            // await new TRN().updateDB(item.doc_num)
-
-                            // const response = await axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(item), {
+                            // response = await axios.post('https://api-satusehat-stg.dto.kemkes.go.id/ssl/v1/ssl/din/ship/notification', JSON.stringify(item), {
                             //     headers: {
-                            //         'Authorization': Bearer ${token['data']['access_token']},
+                            //         'Authorization': `Bearer ${token['data']['access_token']}`,
                             //         'Content-Type': 'application/json'
                             //     },
                             // });
-                            console.log(response)
-                            resolve({ status_code: `${response.data.code} - ${response.data.message}`, item });
+                            resolve(
+                                { status_code: `${response.data.code} - ${response.data.message}`, item },
+                                // await new TRN().updateDB(item.doc_num, response.data.code.toString(), response.data.message)
+                            );
                         } catch (error) {
-                            resolve({ success: false, item});
+                            resolve(
+                                { status_code: 500, item },
+                                // await new TRN().updateDB(item.doc_num, error.includes('socket hang up') ? '201' : '500', error)
+                            );
                         }
-                    }, index * 1000);
+                    }, index * 500);
                 });
             });
 

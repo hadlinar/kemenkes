@@ -14,7 +14,7 @@ class GetTrn {
         } if (lot === "" && docNum !== "") {
             query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' ORDER BY DOC_NUM `
         } if (lot === "" && docNum === "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND TANGGAL_TRANSAKSI = TRUNC(SYSDATE - 1) ORDER BY DOC_NUM`
+            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND VAL_DATE = TRUNC(SYSDATE - 2) ORDER BY DOC_NUM`
         } if (lot !== "" && docNum !== "") {
             query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND DOC_NUM = '${docNum}'`
         }
@@ -36,12 +36,15 @@ class GetTrn {
         }
     }
 
-    async updateDB(docNum) {
+    async updateDB(docNum, status, message) {
         let connection
         var result
 
-        let query = `UPDATE TRN_KEMENKES SET FLG_EXPORT = 'Y'
-                     WHERE doc_num = '${docNum}'`
+        let query = `UPDATE TRN_KEMENKES SET FLG_EXPORT = ${status === '201' || status === '207' ? `'Y'` : `'N'`}, 
+                     EXPORT_STATUS = '${status}',
+                     EXPORT_MESSAGE = '${message}',
+                     EXPORT_DATE = SYSDATE
+                     WHERE DOC_NUM = '${docNum}'`
 
         try {
             connection = await oracledb.getConnection(db.oracle)
@@ -69,7 +72,6 @@ class GetTrn {
                     'Content-Type': 'application/json'
                 },
             }).then(json => {
-                // console.log("masuk then json")
                 console.log(json)
             })
         } catch (e) {
