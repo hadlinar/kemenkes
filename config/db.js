@@ -1,7 +1,8 @@
 const oracle = {
   user: "RN",
-  password: "RNNUS",
-  connectString: "NUSINDO49"
+  password: "ORARNNUS",
+  connectString: "NUSINDO65"
 }
+
 
 module.exports = {oracle};

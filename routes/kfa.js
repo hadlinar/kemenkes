@@ -77,9 +77,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
 
                     try {
                         connection = await oracledb.getConnection(db.oracle)
-                
                         await connection.execute(query,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
-                
                     } catch (err) {
                         console.error(err.message);
                     } finally {
@@ -186,7 +184,7 @@ router.post(`/kemenkes/get-kfa`, multer({storage: diskStorage}).single('file'), 
             fs.unlink(file, (err) => {
                     if (err) throw err
             })
-        }, 15000)
+        }, 10000)
 
         res.status(200).json({
             "message": "ok"
