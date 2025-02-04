@@ -3,20 +3,33 @@ const oracledb = require('oracledb')
 const axios = require('axios')
 
 class GetTrn {
-    async getTrn(docNum, lot) {
+    async getTrn(docNum, lot, dari, sampai) {
         let connection
         var result
 
         let query
 
-        if(docNum === "" && lot !== "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot}`
-        } if (lot === "" && docNum !== "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' ORDER BY DOC_NUM `
-        } if (lot === "" && docNum === "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND VAL_DATE = TRUNC(SYSDATE - 2) ORDER BY DOC_NUM`
-        } if (lot !== "" && docNum !== "") {
-            query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND DOC_NUM = '${docNum}'`
+        if( dari !== "" && sampai !== "") {
+            if(docNum === "" && lot !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND VAL_DATE BETWEEN TO_DATE('${dari}', 'YYYY-MM-DD') AND TO_DATE('${sampai}', 'YYYY-MM-DD')`
+            } if (lot === "" && docNum !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' AND VAL_DATE BETWEEN TO_DATE('${dari}', 'YYYY-MM-DD') AND TO_DATE('${sampai}', 'YYYY-MM-DD') ORDER BY DOC_NUM `
+            } if (lot === "" && docNum === "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND VAL_DATE BETWEEN TO_DATE('${dari}', 'YYYY-MM-DD') AND TO_DATE('${sampai}', 'YYYY-MM-DD') ORDER BY DOC_NUM`
+            } if (lot !== "" && docNum !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND DOC_NUM = '${docNum}' AND VAL_DATE BETWEEN TO_DATE('${dari}', 'YYYY-MM-DD') AND TO_DATE('${sampai}', 'YYYY-MM-DD') `
+            }
+        } else {
+            if(docNum === "" && lot !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot}`
+            } if (lot === "" && docNum !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' ORDER BY DOC_NUM `
+            } if (lot === "" && docNum === "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND VAL_DATE = TRUNC(SYSDATE - 1) ORDER BY DOC_NUM`
+                console.log(query)
+            } if (lot !== "" && docNum !== "") {
+                query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND DOC_NUM = '${docNum}'`
+            }
         }
         try {
             connection = await oracledb.getConnection(db.oracle)
