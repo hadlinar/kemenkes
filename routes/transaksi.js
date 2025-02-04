@@ -8,10 +8,12 @@ const axios = require('axios');
 router.post('/kemenkes/transaksi', async (req, res) => {
     let docNum = req.query.docNum;
     let lot = req.query.lot;
+    let dari = req.query.dari;
+    let sampai = req.query.sampai;
 
     try {
         const token = await new Login().login();
-        const data = await new TRN().getTrn(docNum, lot);
+        const data = await new TRN().getTrn(docNum, lot, dari, sampai);
         let listObj = [];
 
         data.rows.forEach((e) => {
@@ -141,5 +143,6 @@ router.post('/kemenkes/transaksi', async (req, res) => {
         });
     }
 });
+
 
 module.exports = router;

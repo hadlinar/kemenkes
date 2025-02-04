@@ -1,3 +1,5 @@
+process.env.TZ = 'Asia/Jakarta';
+
 const express = require("express")
 const app = express()
 const cors = require("cors")
@@ -30,7 +32,7 @@ app.use(transaksiRouter)
 app.use(saranaRouter)
 app.use('/kemenkes/transaksi', transaksiRouter)
 
-cron.schedule('30 1,2 * * *', async () => {
+cron.schedule('30 1 * * *', async () => {
     try {
         await axios.post('http://localhost:8250/kemenkes/transaksi?docNum=&lot');
     } catch (error) {
