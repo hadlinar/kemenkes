@@ -1,6 +1,4 @@
 const axios = require('axios')
-const qs = require('qs')
-const reader = require('xlsx') 
 
 class GetKFA {
 
