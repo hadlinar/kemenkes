@@ -174,19 +174,23 @@ const diskStorage = multer.diskStorage({
 router.post(`/kemenkes/get-sarana`, async function(req,res) {
     let limit = req.query.limit
     let page = req.query.page
+    let jenisSarana = req.query.jenisSarana
     var connection
 
+    
     try {
-        const list = await new Login().login()
-        var jenisSarana = req.query.jenisSarana
+        connection = await oracledb.getConnection(db.oracle)
+        
+        const list = await new Login().login();
 
-        var sarana = await new Sarana().getSarana(list['data']['access_token'], jenisSarana, limit, page)
-        let delay = 0
-        sarana.data.data.forEach((i) => {
-            setTimeout(async () => {
-                try {
-                    let query = `
-                        BEGIN
+        var sarana = await new Sarana().getSarana(list.data.access_token, jenisSarana, limit, page);
+
+        var query
+        
+        for (const i of sarana.data.data) {
+            try {
+                query = `
+                    BEGIN
                         INSERT INTO RN.MST_SARANA_KFA(
                             KODE_SATSET,
                             KODE_SARANA,
@@ -219,73 +223,73 @@ router.post(`/kemenkes/get-sarana`, async function(req,res) {
                             SUB_SUBJENIS_NAMA,
                             SUB_SUBJENIS_KODE,
                             SUB_SUBJENIS_KATEGORI
-                        ) VALUES (
+                        ) 
+                        SELECT
                             '${i.kode_satusehat}',
-                            '${i.kode_sarana}',
-                            '${i.nama.replace(/'/g, "")}',
-                            '${i.jenis_sarana.nama.replace(/'/g, "")}',
-                            '${i.telp === null ? "-" : (i.telp.replace(/[^\w\s]/gi, '') == null ? null : i.telp.replace(/[^\w\s]/gi, ''))}',
-                            '${i.alamat == null ? "" : i.alamat.replace(/'/g, "")}',
-                            '${i.provinsi.nama == null ? "" : i.provinsi.nama.replace(/'/g, "")}',
-                            '${i.provinsi.kode == null ? "" : i.provinsi.kode}',
-                            '${i.kabkota.nama == null ? "" : i.kabkota.nama.replace(/'/g, "")}',
-                            '${i.kabkota.kode == null ? "" : i.kabkota.kode}',
-                            '${i.kecamatan.nama == null ? "" : i.kecamatan.nama.replace(/'/g, "")}',
-                            '${i.kecamatan.kode == null ? "" : i.kecamatan.kode}',
-                            '${i.kelurahan.nama == null ? "" : i.kelurahan.nama.replace(/'/g, "")}',
-                            '${i.kelurahan.kode == null ? "" : i.kelurahan.kode}',
-                            '${i.status_sarana == null ? "" : i.status_sarana}',
-                            '${i.email === null ? "-" : i.email.replace(/'/g, "")}',
+                            '${i.kode_sarana ?? ""}',
+                            '${i.nama === null ? "-" : i.nama?.replace(/'/g, "")}',
+                            '${i.jenis_sarana.nama === null ? "-" : i.jenis_sarana.nama?.replace(/'/g, "")}',
+                            '${i.telp === null ? "-" : i.telp?.replace(/[^\w\s]/gi, "")}',
+                            '${i.alamat === null ? "-" : i.alamat.replace(/'/g, "")}',
+                            '${i.provinsi.nama === null ? "-" : i.provinsi.nama?.replace(/'/g, "")}',
+                            '${i.provinsi.kode === null ? "-" : i.provinsi.kode}',
+                            '${i.kabkota.nama === null ? "-" : i.kabkota.nama?.replace(/'/g, "")}',
+                            '${i.kabkota.kode === null ? "" : i.kabkota.kode}',
+                            '${i.kecamatan.nama === null ? "-" : i.kecamatan?.nama.replace(/'/g, "")}',
+                            '${i.kecamatan.kode === null ? "-" : i.kecamatan.kode}',
+                            '${i.kelurahan.nama === null ? "-" : i.kelurahan.nama?.replace(/'/g, "")}',
+                            '${i.kelurahan.kode === null ? "-" : i.kelurahan.kode}',
+                            '${i.status_sarana === null ? "" : i.status_sarana}',
+                            '${i.email === null ? "-" : i.email?.replace(/'/g, "")}',
                             '${i.nib === null ? "-" : i.nib}',
                             '${i.sio === null ? "-" : i.sio}',
-                            ${i.tgl_sio_akhir === null ? null : `'${i.tgl_sio_akhir}'`},
-                            ${i.tgl_sio_mulai === null ? null : `'${i.tgl_sio_mulai}'`},
+                            ${i.tgl_sio_akhir === null ? null : `TO_DATE('${i.tgl_sio_akhir}', 'YYYY-MM-DD')`},
+                            ${i.tgl_sio_mulai === null ? null : `TO_DATE('${i.tgl_sio_mulai}', 'YYYY-MM-DD')`},
                             SYSDATE,
-                            '${i.status_aktif == null ? "" : i.status_aktif}',
+                            '${i.status_aktif === null ? "-" : i.status_aktif}',
                             '${i.website === null ? "-" : i.website.replace(/'/g, "")}',
                             '${i.jenis_sarana.kode === null ? "-" : i.jenis_sarana.kode}',
-                            '${i.subjenis.Nama === null ? "-" : i.subjenis.Nama.replace(/'/g, "")}',
-                            '${i.subjenis.kode === null ? "-" : i.subjenis.kode}',
+                            '${i.subjenis.Nama === null ? "-" : i.subjenis.Nama?.replace(/'/g, "")}',
+                            '${i.subjenis.kode === null? "-" : i.subjenis.kode}',
                             '${i.operasional === null ? "-" : i.operasional}',
-                            '${i.subjenis.sarana_kategori.nama === null ? "-" : i.subjenis.sarana_kategori.nama.replace(/'/g, "")}',
-                            '${i.sub_subjenis.Nama === null ? "-" : i.sub_subjenis.Nama.replace(/'/g, "")}',
+                            '${i.subjenis.sarana_kategori.nama === null ? "-" : i.subjenis.sarana_kategori.nama?.replace(/'/g, "")}',
+                            '${i.sub_subjenis.Nama === null ? "-" : i.sub_subjenis.Nama?.replace(/'/g, "")}',
                             '${i.sub_subjenis.kode === null ? "-" : i.sub_subjenis.kode}',
-                            '${i.sub_subjenis.sarana_kategori.nama === null ? "-" : i.sub_subjenis.sarana_kategori.nama.replace(/'/g, "")}'
+                            '${i.sub_subjenis.sarana_kategori.nama === null ? "-" : i.sub_subjenis.sarana_kategori.nama?.replace(/'/g, "")}'
+                        FROM DUAL
+                        WHERE NOT EXISTS (
+                            SELECT 1 FROM RN.MST_SARANA_KFA WHERE KODE_SATSET = '${i.kode_satusehat}'
                         );
-                        END;
-                    `
+                        COMMIT;
+                    END;
+                `
+                
+                await connection.execute(query, [])
+            } catch (e) {
+                console.log(query)
+            }
+        }
 
+        await connection.commit()
 
-                    try {
-                        connection = await oracledb.getConnection(db.oracle)
-
-                        await connection.execute(query,  [], { outFormat: oracledb.OUT_FORMAT_OBJECT, autoCommit: true})
-
-                    } catch (err) {
-                        console.error(i.kode_satusehat, err.message);
-                    } finally {
-                        if (connection) {
-                            try {
-                            await connection.close();
-                            } catch (err) {
-                            console.error(err.message);
-                            }
-                        }
-                    }
-                } catch (e) {
-                    res.status(500).json({
-                        error: `Internal server error ${e}`,
-                    })
-                }
-            }, 1000 + delay)
-            delay += 1000
+        res.status(200).json({
+            "message": sarana.data.message,
+            "page": sarana.data.page,
+            "total_page": sarana.data.total_page
         })
         
     } catch(err) {
-        console.log(err)
         res.status(500).json({
-            error: "Internal server error",
+            error: err,
         });
+    } finally {
+        if (connection) {
+            try {
+                await connection.close();
+            } catch (e) {
+                console.error("Error closing DB connection");
+            }
+        }
     }
         
 });
