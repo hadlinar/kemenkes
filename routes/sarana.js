@@ -266,7 +266,7 @@ router.post(`/kemenkes/get-sarana`, async function(req,res) {
                 
                 await connection.execute(query, [])
             } catch (e) {
-                console.log(query)
+                console.log(e)
             }
         }
 
