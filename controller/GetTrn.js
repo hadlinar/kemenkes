@@ -9,7 +9,7 @@ class GetTrn {
 
         let query
 
-        if( dari !== "" && sampai !== "") {
+        if( dari !== undefined && sampai !== undefined) {
             console.log(dari, sampai)
             if(docNum === "" && lot !== "") {
                 query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND VAL_DATE BETWEEN TO_DATE('${dari}', 'YYYY-MM-DD') AND TO_DATE('${sampai}', 'YYYY-MM-DD')`
@@ -27,7 +27,6 @@ class GetTrn {
                 query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND DOC_NUM = '${docNum}' ORDER BY DOC_NUM `
             } if (lot === "" && docNum === "") {
                 query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND VAL_DATE = TRUNC(SYSDATE - 2) ORDER BY DOC_NUM`
-                console.log(query)
             } if (lot !== "" && docNum !== "") {
                 query = `SELECT * FROM TRN_KEMENKES WHERE PENGIRIM_KODE IS NOT NULL AND PENERIMA_KODE IS NOT NULL AND KFA_CODE IS NOT NULL AND FLG_EXPORT = 'N' AND LOT_NO = '${lot} AND DOC_NUM = '${docNum}'`
             }
@@ -85,6 +84,7 @@ class GetTrn {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
+                timeout: 60000
             }).then(json => {
                 console.log(json)
             })
