@@ -110,9 +110,10 @@ router.post('/kemenkes/transaksi', async (req, res) => {
                                 await new TRN().updateDB(item.doc_num, response.data.code.toString(), response.data.message)
                             );
                         } catch (error) {
+                            const errorMessage = error?.message || error.toString()
                             resolve(
                                 { status_code: 500, item },
-                                await new TRN().updateDB(item.doc_num, error.includes('socket hang up') ? '201' : '500', error)
+                                await new TRN().updateDB(item.doc_num, errorMessage.includes('socket hang up') ? '201' : '500', errorMessage)
                             );
                         }
                     }, index * 500);
